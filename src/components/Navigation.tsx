@@ -88,7 +88,7 @@ export function Navigation() {
           
           {/* Logo & Brand */}
           <div className="flex items-center space-x-3">
-            <Link href="/" className="flex items-center space-x-3">
+            <Link href={user ? "/" : "/login"} className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-amber-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
                 <ShieldCheck className="w-6 h-6 text-white" />
               </div>
@@ -107,21 +107,23 @@ export function Navigation() {
           {/* User Account Controls */}
           <div className="flex items-center space-x-3">
             
-            {/* Mode Pill Badge */}
-            <div className="hidden md:flex items-center space-x-2 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-full">
-              <span className="text-xs text-slate-400 font-medium">Mode:</span>
-              {mode === 'REGISTRATION' ? (
-                <span className="flex items-center text-xs font-semibold text-amber-400 bg-amber-950/60 border border-amber-800/80 px-2.5 py-0.5 rounded-full">
-                  <Sparkles className="w-3.5 h-3.5 mr-1 animate-pulse" />
-                  REGISTRATION MODE
-                </span>
-              ) : (
-                <span className="flex items-center text-xs font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-2.5 py-0.5 rounded-full">
-                  <ShieldCheck className="w-3.5 h-3.5 mr-1" />
-                  ONGOING COMPLIANCE MANAGER
-                </span>
-              )}
-            </div>
+            {/* Mode Pill Badge - Only show when authenticated */}
+            {user && (
+              <div className="hidden md:flex items-center space-x-2 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-full">
+                <span className="text-xs text-slate-400 font-medium">Mode:</span>
+                {mode === 'REGISTRATION' ? (
+                  <span className="flex items-center text-xs font-semibold text-amber-400 bg-amber-950/60 border border-amber-800/80 px-2.5 py-0.5 rounded-full">
+                    <Sparkles className="w-3.5 h-3.5 mr-1 animate-pulse" />
+                    REGISTRATION MODE
+                  </span>
+                ) : (
+                  <span className="flex items-center text-xs font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-2.5 py-0.5 rounded-full">
+                    <ShieldCheck className="w-3.5 h-3.5 mr-1" />
+                    ONGOING COMPLIANCE MANAGER
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* User Session Pill */}
             {user ? (
@@ -149,27 +151,30 @@ export function Navigation() {
 
         </div>
 
-        {/* Sub-nav Links */}
-        <nav className="flex space-x-1 overflow-x-auto py-2 scrollbar-none border-t border-slate-800/50">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                  isActive
-                    ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                }`}
-              >
-                <Icon className={`w-4 h-4 mr-1.5 ${isActive ? 'text-blue-400' : 'text-slate-400'}`} />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+        {/* Sub-nav Links - ONLY visible when user is logged in */}
+        {user && (
+          <nav className="flex space-x-1 overflow-x-auto py-2 scrollbar-none border-t border-slate-800/50">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                    isActive
+                      ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 mr-1.5 ${isActive ? 'text-blue-400' : 'text-slate-400'}`} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        )}
+
       </div>
     </header>
   );

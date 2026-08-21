@@ -3,12 +3,12 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, Lock, Mail, ArrowRight, AlertCircle, KeyRound, Sparkles } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('stephen.rey@salazar-group.net');
-  const [password, setPassword] = useState('FlowForce2026!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -56,20 +56,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Demo Seed Credentials Callout */}
-        <div className="p-3.5 rounded-xl bg-blue-950/40 border border-blue-800/80 space-y-1 text-xs text-blue-200">
-          <div className="flex items-center space-x-1.5 font-bold text-blue-300">
-            <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
-            <span>SEEDED USER CREDENTIALS</span>
-          </div>
-          <p className="text-slate-300">
-            Email: <strong className="text-white font-mono">stephen.rey@salazar-group.net</strong>
-          </p>
-          <p className="text-slate-300">
-            Initial Temp Password: <strong className="text-white font-mono">FlowForce2026!</strong>
-          </p>
-        </div>
-
         {error && (
           <div className="p-3 rounded-xl bg-red-950/60 border border-red-800 text-xs text-red-300 flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
@@ -86,6 +72,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="enter your email"
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
                 required
               />
@@ -105,6 +92,7 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••••••"
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
                 required
               />
