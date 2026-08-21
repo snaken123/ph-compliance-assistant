@@ -1,29 +1,36 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import confetti from 'canvas-confetti';
 import { 
   ClipboardList, 
-  HelpCircle, 
-  AlertTriangle, 
   CheckCircle2, 
+  Clock, 
+  AlertTriangle, 
   ExternalLink, 
-  ShieldAlert,
-  ChevronDown,
+  FileText, 
+  Upload, 
+  ChevronDown, 
   ChevronUp,
-  Sparkles,
-  Award
+  ShieldCheck,
+  Building2,
+  DollarSign,
+  HelpCircle,
+  Lock
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
+import { CalculatedRequirement } from '@/lib/compliance/types';
 
 export default function RequirementsPage() {
-  const [requirements, setRequirements] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [requirements, setRequirements] = useState<CalculatedRequirement[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string>('ALL');
   const [expandedCode, setExpandedCode] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadRequirements();
+    loadDocuments();
   }, []);
 
   const loadRequirements = async () => {
@@ -38,7 +45,28 @@ export default function RequirementsPage() {
     }
   };
 
-  const updateStatus = async (id: string, newState: string) => {
+  const loadDocuments = async () => {
+    try {
+      const res = await fetch('/api/documents');
+      const data = await res.json();
+      if (data.success) setDocuments(data.documents || []);
+    } catch (err) {
+      console.error('Failed to fetch documents:', err);
+    }
+  };
+
+  const updateStatus = async (id: string, newState: string, reqItem?: CalculatedRequirement) => {
+    // Artifact Guard Validation for [HIGH-01]
+    if (newState === 'COMPLETED' && reqItem) {
+      const hasArtifact = documents.some((d) => d.requirementId === (reqItem as any).id || d.title.toLowerCase().includes(reqItem.agency.toLowerCase()));
+      if (!hasArtifact) {
+        const confirmWithoutArtifact = confirm(
+          `⚠️ MANDATORY ARTIFACT ADVISORY:\nNo document proof artifact (e.g. PDF/Image certificate) has been uploaded for "${reqItem.title}".\n\nPhilippine statutory audit rules require keeping proof of compliance.\n\nDo you want to proceed marking this item as Completed anyway?`
+        );
+        if (!confirmWithoutArtifact) return;
+      }
+    }
+
     setUpdatingId(id);
     try {
       const res = await fetch(`/api/requirements/${id}`, {
@@ -49,7 +77,6 @@ export default function RequirementsPage() {
       const data = await res.json();
       if (data.success) {
         if (newState === 'COMPLETED') {
-          // Trigger celebration confetti on task completion
           confetti({
             particleCount: 80,
             spread: 70,
@@ -89,34 +116,34 @@ export default function RequirementsPage() {
     <div className="max-w-5xl mx-auto space-y-6">
       
       {/* Header */}
-      <div className="p-6 rounded-2xl glass-panel border border-slate-800 space-y-3">
+      <div className="p-6 rounded-3xl glass-panel border border-slate-800 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
               <ClipboardList className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Statutory Requirements & Legal Justifications</h1>
+              <h1 className="text-xl font-bold text-white">Philippine Statutory Compliance Matrix</h1>
               <p className="text-xs text-slate-400">
-                Understand WHY each Philippine legal requirement applies to FlowForceRM, whether it is mandatory, and consequences of non-compliance.
+                Statutory requirement evaluation engine enforcing DTI Act 3883, Local Government Code RA 7160, NIRC, EOPT Act RA 11976, and DOLE DO 174.
               </p>
             </div>
           </div>
         </div>
 
         {/* Filter Pills */}
-        <div className="flex flex-wrap gap-2 pt-3 border-t border-slate-800/80 text-xs">
+        <div className="flex space-x-2 overflow-x-auto pt-2 scrollbar-none">
           {[
-            { id: 'ALL', label: `All Rules (${requirements.length})` },
-            { id: 'REQUIRED', label: 'Mandatory / Required' },
-            { id: 'NEEDS_VERIFICATION', label: 'Needs Verification' },
-            { id: 'NOT_APPLICABLE', label: 'Not Applicable' },
-            { id: 'COMPLETED', label: 'Completed ✓' }
+            { id: 'ALL', label: `All Requirements (${requirements.length})` },
+            { id: 'REQUIRED', label: `Mandatory (${requirements.filter(r => r.applicabilityStatus === 'REQUIRED').length})` },
+            { id: 'NEEDS_VERIFICATION', label: `Verification Needed (${requirements.filter(r => r.applicabilityStatus === 'NEEDS_VERIFICATION' || r.applicabilityStatus === 'CONDITIONAL').length})` },
+            { id: 'COMPLETED', label: `Completed (${requirements.filter(r => r.completionState === 'COMPLETED').length})` },
+            { id: 'NOT_APPLICABLE', label: `Exempt (${requirements.filter(r => r.applicabilityStatus === 'NOT_APPLICABLE').length})` },
           ].map((f) => (
             <button
               key={f.id}
               onClick={() => setSelectedFilter(f.id)}
-              className={`px-3.5 py-1.5 rounded-xl font-medium transition ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
                 selectedFilter === f.id
                   ? 'bg-blue-600 text-white font-semibold shadow-lg shadow-blue-600/30'
                   : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
@@ -134,7 +161,7 @@ export default function RequirementsPage() {
           const isExpanded = expandedCode === req.code;
           const isCompleted = req.completionState === 'COMPLETED';
           const isNotApplicable = req.applicabilityStatus === 'NOT_APPLICABLE';
-          const isNeedsVerification = req.applicabilityStatus === 'NEEDS_VERIFICATION';
+          const hasProofDoc = documents.some((d) => d.requirementId === (req as any).id || d.title.toLowerCase().includes(req.agency.toLowerCase()));
 
           return (
             <div 
@@ -158,123 +185,78 @@ export default function RequirementsPage() {
                     }`}>
                       {req.priority}
                     </span>
-                    <span className="text-xs font-semibold text-slate-400 font-mono">[{req.agency}]</span>
-                    <h3 className="font-bold text-sm text-white">{req.title}</h3>
+                    <span className="text-xs font-semibold text-slate-400 font-mono">{req.agency}</span>
+                    {hasProofDoc && (
+                      <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center font-medium">
+                        <FileText className="w-3 h-3 mr-1" /> Doc Attached
+                      </span>
+                    )}
                   </div>
-
-                  <p className="text-xs text-slate-300 line-clamp-1">
-                    {req.notes || req.whyItApplies}
-                  </p>
+                  <h3 className="text-sm font-bold text-white tracking-tight">{req.title}</h3>
+                  <p className="text-xs text-slate-300 line-clamp-1">{req.description}</p>
                 </div>
 
-                <div className="flex items-center space-x-3 shrink-0">
-                  <div className="text-right">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold block shadow-sm ${
-                      isCompleted ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' :
-                      isNotApplicable ? 'bg-slate-800 text-slate-400 border border-slate-700' :
-                      isNeedsVerification ? 'bg-amber-950 text-amber-300 border border-amber-800' :
-                      'bg-blue-950 text-blue-300 border border-blue-800'
-                    }`}>
-                      {isCompleted ? 'COMPLETED ✓' : req.applicabilityStatus}
-                    </span>
-                    <span className="text-[11px] text-slate-400 block mt-0.5 font-mono">
-                      Fee: ₱{req.estimatedFee?.toLocaleString() || 0}
-                    </span>
-                  </div>
+                <div className="flex items-center space-x-3 self-end sm:self-center">
+                  <select
+                    value={req.completionState}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => updateStatus((req as any).id || req.code, e.target.value, req)}
+                    disabled={updatingId === ((req as any).id || req.code)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
+                      isCompleted 
+                        ? 'bg-emerald-950 text-emerald-300 border-emerald-800' 
+                        : 'bg-slate-900 text-slate-200 border-slate-700'
+                    }`}
+                  >
+                    <option value="NOT_STARTED">Not Started</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="SUBMITTED">Submitted to Agency</option>
+                    <option value="COMPLETED">Completed ✓</option>
+                    <option value="WAIVED">Waived / Exempt</option>
+                  </select>
 
-                  {isExpanded ? (
-                    <ChevronUp className="w-5 h-5 text-blue-400" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-slate-500" />
-                  )}
+                  <div className="text-slate-400">
+                    {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  </div>
                 </div>
               </div>
 
-              {/* Detailed Drawer */}
+              {/* Drawer Content */}
               {isExpanded && (
-                <div className="p-6 border-t border-slate-800/80 space-y-5 bg-slate-950/60 rounded-b-2xl animate-fadeIn">
+                <div className="px-5 pb-5 pt-2 border-t border-slate-800/80 space-y-4 text-xs">
                   
-                  {/* Grid 1: Why it applies / Why it might not apply */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-xl bg-blue-950/20 border border-blue-900/40 space-y-2">
-                      <h4 className="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center">
-                        <HelpCircle className="w-4 h-4 mr-1.5" /> Why does this apply to me?
-                      </h4>
-                      <p className="text-xs text-slate-300 leading-relaxed">
-                        {req.whyItApplies}
-                      </p>
+                    <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                      <span className="font-bold text-blue-400 block">Why It Applies To You:</span>
+                      <p className="text-slate-300 leading-relaxed">{req.whyItApplies}</p>
                     </div>
 
-                    <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
-                      <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center">
-                        <HelpCircle className="w-4 h-4 mr-1.5" /> Why might it NOT apply or be conditional?
-                      </h4>
-                      <p className="text-xs text-slate-300 leading-relaxed">
-                        {req.whyItMightNotApply}
-                      </p>
+                    <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                      <span className="font-bold text-amber-400 block">Exemption / Non-Applicability Criteria:</span>
+                      <p className="text-slate-300 leading-relaxed">{req.whyItMightNotApply}</p>
                     </div>
                   </div>
 
-                  {/* Consequences & Penalties Section */}
-                  <div className="p-4 rounded-xl bg-red-950/20 border border-red-900/40 space-y-2">
-                    <h4 className="text-xs font-bold text-red-400 uppercase tracking-wider flex items-center">
-                      <ShieldAlert className="w-4 h-4 mr-1.5" /> What happens if I don't comply? (Consequences & Penalties)
-                    </h4>
-                    <p className="text-xs text-slate-300 leading-relaxed">
-                      {req.consequencesAndPenalties}
-                    </p>
-                  </div>
-
-                  {/* Legal Basis & Verification Metadata */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-800 text-xs">
+                  {/* Legal Basis & Official Portal Link */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-950/60 border border-slate-800">
                     <div>
-                      <span className="text-slate-500">Official Legal Basis: </span>
-                      <strong className="text-slate-300">{req.legalBasis}</strong>
+                      <span className="text-slate-400 font-mono text-[11px] block">Legal Basis:</span>
+                      <span className="text-slate-200 font-medium">{req.legalBasis}</span>
                     </div>
 
-                    <div className="flex items-center space-x-3">
-                      <a
-                        href={req.officialSourceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 hover:underline inline-flex items-center font-medium"
-                      >
-                        {req.officialSource} <ExternalLink className="w-3.5 h-3.5 ml-1" />
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Actions Bar */}
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-800/80">
-                    <span className="text-xs text-slate-400 font-mono">
-                      Date Verified: {req.dateVerified || '2026-08-01'}
-                    </span>
-
-                    <div className="flex items-center space-x-2">
-                      {!isCompleted ? (
-                        <button
-                          onClick={() => updateStatus(req.id, 'COMPLETED')}
-                          disabled={updatingId === req.id}
-                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow-lg shadow-emerald-600/20 flex items-center"
-                        >
-                          <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                          Mark as Completed ✓
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => updateStatus(req.id, 'NOT_STARTED')}
-                          disabled={updatingId === req.id}
-                          className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs transition"
-                        >
-                          Reopen Task
-                        </button>
-                      )}
-                    </div>
+                    <a
+                      href={req.officialSourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3.5 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-300 font-bold transition flex items-center space-x-1.5 self-start sm:self-center"
+                    >
+                      <span>Official Portal ({req.officialSource})</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
                   </div>
 
                 </div>
               )}
-
             </div>
           );
         })}
