@@ -1,0 +1,148 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  name               String?   @default("Stephen Rey Salazar")
+  passwordHash       String
+  isActivated        Boolean   @default(true)
+  mustChangePassword Boolean   @default(true)
+  activationToken    String?
+  resetToken         String?
+  resetTokenExpiry   DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model BusinessProfile {
+  id                   String   @id @default("flowforce-main")
+  businessName         String   @default("FlowForceRM")
+  tradeName            String   @default("FlowForceRM")
+  businessActivity     String   @default("SaaS / Software Development")
+  isOnline             Boolean  @default(true)
+  isHomeBased          Boolean  @default(true)
+  propertyType         String   @default("owned_residence")
+  province             String   @default("Metro Manila")
+  cityMunicipality     String   @default("Quezon City")
+  barangay             String   @default("Barangay Holy Spirit")
+  addressDetail        String   @default("123 Innovation St., Quezon City")
+  
+  // Tax & Government Identifiers
+  tinNumber            String?  @default("9-Digit BIR TIN")
+  birRdoNumber         String?  @default("RDO 039 - Quezon City South")
+  sssNumber            String?  @default("10-Digit SSS Number")
+  philHealthPin        String?  @default("12-Digit PhilHealth PIN")
+  pagIbigMid           String?  @default("12-Digit Pag-IBIG MID")
+  dtiCertificateNo     String?  @default("DTI BNR Certificate No.")
+  lguBinNumber         String?  @default("LGU Business Account No. (BIN)")
+
+  hasEmployees         Boolean  @default(false)
+  employeeCount        Int      @default(0)
+  hasContractors       Boolean  @default(true)
+  hasForeignClients    Boolean  @default(true)
+  hasLocalClients      Boolean  @default(true)
+  monthlyGrossReceipts Float    @default(10000)
+  annualGrossReceipts  Float    @default(120000)
+  taxRegime            String   @default("EIGHT_PERCENT")
+  mode                 String   @default("REGISTRATION")
+  updatedAt            DateTime @updatedAt
+}
+
+model RequirementItem {
+  id                      String   @id @default(uuid())
+  code                    String   @unique
+  agency                  String
+  title                   String
+  description             String
+  whyItApplies            String
+  whyItMightNotApply      String
+  consequencesAndPenalties String
+  priority                String   // CRITICAL, HIGH, MEDIUM, LOW
+  applicabilityStatus     String   // REQUIRED, CONDITIONAL, RECOMMENDED, NOT_APPLICABLE, NEEDS_VERIFICATION
+  completionState         String   // NOT_STARTED, IN_PROGRESS, SUBMITTED, COMPLETED, WAIVED, OVERDUE
+  estimatedFee            Float    @default(0)
+  legalBasis              String
+  officialSource          String
+  officialSourceUrl       String
+  dateVerified            String
+  dueDate                 String?
+  frequency               String   // ONE_TIME, ANNUAL, QUARTERLY, RENEWAL_5YR
+  notes                   String?
+  referenceNo             String?
+  updatedAt               DateTime @updatedAt
+}
+
+model ComplianceDeadline {
+  id               String    @id @default(uuid())
+  requirementId   String?
+  agency           String
+  title            String
+  period           String
+  dueDate          DateTime
+  amount           Float     @default(0)
+  status           String    @default("PENDING") // PENDING, PAID, FILED, OVERDUE, WAIVED
+  escalationLevel  String    @default("NORMAL")  // NORMAL, WARNING_30D, WARNING_14D, WARNING_7D, URGENT_3D, URGENT_1D, OVERDUE_ACTIVE
+  submittedAt      DateTime?
+  paymentReference String?
+  notes            String?
+}
+
+model DocumentArtifact {
+  id              String    @id @default(uuid())
+  requirementId  String?
+  title           String
+  fileType        String
+  fileSize        Int       @default(0)
+  filePath        String
+  issuingAgency   String
+  referenceNumber String?
+  issuedDate      DateTime?
+  expirationDate  DateTime?
+  status          String    @default("VALID") // VALID, EXPIRING_SOON, EXPIRED, SUPERSEDED
+  notes           String?
+  createdAt       DateTime  @default(now())
+}
+
+model GovernmentContactLog {
+  id              String   @id @default(uuid())
+  agency          String
+  officeName      String
+  personContacted String?
+  contactMethod   String   // PHONE, EMAIL, IN_PERSON, WEBSITE
+  dateContacted   DateTime @default(now())
+  questionAsked   String
+  answerReceived  String
+  referenceNumber String?
+  proofFilePath   String?
+  notes           String?
+}
+
+model ContractorRecord {
+  id                  String   @id @default(uuid())
+  contractorName      String
+  serviceProvided     String
+  agreementType       String   // INDEPENDENT_CONTRACTOR, FREELANCER, COMMISSION_AGENT
+  monthlyPayment      Float
+  doleControlScore    Int      // 0 to 100 evaluation score
+  riskLevel           String   // LOW, MEDIUM, HIGH_EMPLOYEE_RISK
+  hasTaxWithholding   Boolean  @default(false)
+  hasSignedAgreement  Boolean  @default(true)
+  notes               String?
+  createdAt           DateTime @default(now())
+}
+
+model AuditTrail {
+  id          String   @id @default(uuid())
+  action      String
+  entityType  String
+  entityId    String
+  description String
+  timestamp   DateTime @default(now())
+}
