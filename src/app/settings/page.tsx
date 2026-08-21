@@ -142,7 +142,7 @@ export default function SettingsPage() {
     }
   };
 
-  const availableCities = PHILIPPINE_PROVINCES[locationForm.province] || ['Quezon City', 'Makati City', 'Taguig City (BGC)', 'Pasig City'];
+  const availableCities = PHILIPPINE_PROVINCES[locationForm.province] || PHILIPPINE_PROVINCES['Metro Manila (NCR)'];
 
   if (loading) {
     return (

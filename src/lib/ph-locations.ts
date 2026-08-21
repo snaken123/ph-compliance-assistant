@@ -1,12 +1,31 @@
 export const PHILIPPINE_PROVINCES: Record<string, string[]> = {
   'Metro Manila (NCR)': [
+    'Parañaque City',
     'Quezon City',
     'Makati City',
     'Taguig City (BGC)',
     'Pasig City',
     'Manila',
     'Mandaluyong City',
+    'Muntinlupa City (Alabang)',
+    'Las Piñas City',
+    'Pasay City',
+    'Marikina City',
+    'Valenzuela City',
+    'Caloocan City',
+    'Malabon City',
+    'Navotas City',
+    'San Juan City',
+    'Pateros'
+  ],
+  'Metro Manila': [
     'Parañaque City',
+    'Quezon City',
+    'Makati City',
+    'Taguig City (BGC)',
+    'Pasig City',
+    'Manila',
+    'Mandaluyong City',
     'Muntinlupa City (Alabang)',
     'Las Piñas City',
     'Pasay City',
@@ -82,6 +101,7 @@ export const PHILIPPINE_PROVINCES: Record<string, string[]> = {
 };
 
 export const POPULAR_BIR_RDOS = [
+  'RDO 052 - Parañaque City',
   'RDO 039 - South Quezon City',
   'RDO 038 - North Quezon City',
   'RDO 047 - East Makati',
@@ -90,7 +110,6 @@ export const POPULAR_BIR_RDOS = [
   'RDO 043 - Pasig City',
   'RDO 041 - Mandaluyong City',
   'RDO 050 - South Manila',
-  'RDO 052 - Parañaque City',
   'RDO 053A - Las Piñas City',
   'RDO 080 - Mandaue City & Cebu North',
   'RDO 083 - Talisay City & Cebu South',
