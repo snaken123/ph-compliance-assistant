@@ -53,6 +53,7 @@ export function Navigation() {
 
   const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/wizard', label: 'Setup Wizard', icon: Sparkles },
     { href: '/business', label: 'My Business', icon: Building2 },
     { href: '/roadmap', label: 'Roadmap', icon: MapPin },
     { href: '/requirements', label: 'Requirements', icon: ClipboardList },
